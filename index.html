@@ -2,13 +2,14 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="Yovvoyi Tabiat — 3D hayvonlar o'yini. Burgut, Bo'ri yoki Sichqon bo'lib o'ynang!">
     <title>🐾 Yovvoyi Tabiat — 3D O'yin</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #0a0a1a; font-family: 'Outfit', sans-serif; }
+        body { overflow: hidden; background: #0a0a1a; font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         canvas { display: block; }
 
         /* ===== CHARACTER SELECT ===== */
@@ -16,7 +17,8 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(ellipse at center, rgba(12,12,35,0.97), rgba(3,3,12,0.99));
             z-index: 300; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            align-items: center; justify-content: center; justify-content: safe center;
+            overflow-y: auto; padding: 20px 16px;
         }
         #char-select.hidden { display: none; }
         #char-select h1 {
@@ -172,6 +174,70 @@
             border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
             background: rgba(10,10,30,0.7);
         }
+
+        /* ===== TOUCH CONTROLS ===== */
+        #touch-controls, .touch-only { display: none; }
+        body.touch .touch-only { display: inline; }
+        body.touch .kb-only { display: none; }
+        body.touch #touch-controls.on { display: block; }
+        body.touch #controls-hint { display: none !important; }
+        #joystick {
+            position: fixed; z-index: 20; touch-action: none;
+            left: calc(20px + env(safe-area-inset-left)); bottom: calc(24px + env(safe-area-inset-bottom));
+            width: 130px; height: 130px; border-radius: 50%;
+            background: rgba(10,10,30,0.45); backdrop-filter: blur(8px);
+            border: 2px solid rgba(255,255,255,0.12);
+        }
+        #joy-knob {
+            position: absolute; left: 50%; top: 50%; width: 56px; height: 56px;
+            margin: -28px 0 0 -28px; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle at 35% 35%, rgba(249,115,22,0.9), rgba(239,68,68,0.75));
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        #shoot-btn {
+            position: fixed; z-index: 20; touch-action: none; display: none;
+            right: calc(24px + env(safe-area-inset-right)); bottom: calc(34px + env(safe-area-inset-bottom));
+            width: 86px; height: 86px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(167,139,250,0.85), rgba(109,40,217,0.8));
+            border: 2px solid rgba(255,255,255,0.25); color: #fff;
+            font-family: 'Outfit'; font-weight: 800; font-size: 0.7rem; letter-spacing: 1px;
+            flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 6px 24px rgba(109,40,217,0.4);
+        }
+        #shoot-btn .ico { font-size: 1.9rem; line-height: 1; }
+        #shoot-btn.pressed { transform: scale(0.92); filter: brightness(1.25); }
+        body.hunter-mode #shoot-btn { display: flex; }
+        body.touch #minimap { bottom: auto; top: calc(var(--hud-h, 120px) + 10px); right: 12px; }
+        body.touch #minimap canvas { width: 100px; height: 100px; }
+
+        /* ===== PHONE LAYOUT ===== */
+        @media (max-width: 600px) {
+            #char-select h1 { font-size: 1.9rem; text-align: center; }
+            #char-select .sub { font-size: 0.85rem; margin-bottom: 18px; text-align: center; }
+            .cards { gap: 10px; width: 100%; max-width: 400px; }
+            .card { width: calc(50% - 5px); padding: 16px 10px; border-radius: 16px; }
+            .card:hover { transform: none; }
+            .card .emoji { font-size: 2.8rem; margin-bottom: 6px; }
+            .card h3 { font-size: 1.05rem; margin-bottom: 4px; }
+            .card p { font-size: 0.68rem; line-height: 1.45; }
+            .card .difficulty { margin-top: 8px; padding: 3px 10px; font-size: 0.6rem; }
+
+            #hud { padding: calc(10px + env(safe-area-inset-top)) 10px 0; gap: 8px; }
+            .hud-panel { padding: 10px 12px; border-radius: 12px; }
+            .hud-panel h2 { font-size: 0.92rem; }
+            .hud-panel .info { font-size: 0.66rem; }
+            #hud-left { flex: 1; min-width: 0; }
+            .bar-outer { width: 100%; max-width: 160px; }
+            .stat-row { gap: 6px; margin-bottom: 2px; }
+            .stat-label { font-size: 0.6rem; }
+            .stat-value { font-size: 1.05rem; }
+
+            #game-over h2 { font-size: 2rem; text-align: center; }
+            #game-over p { padding: 0 20px; text-align: center; }
+            .go-btns { flex-direction: column; gap: 10px; }
+            #msg-toast { width: 90%; }
+            #msg-toast .toast-text { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
@@ -202,7 +268,7 @@
         <div class="card hunter" onclick="selectChar('hunter')">
             <span class="emoji">🏹</span>
             <h3>OVCHI</h3>
-            <p>Kamon bilan kiyik va quyonlarni ovlang! PROBEL tugmasi bilan o'q uzing. Bo'rilardan ehtiyot bo'ling — ular hujum qiladi!</p>
+            <p>Kamon bilan kiyik va quyonlarni ovlang! <span class="kb-only">PROBEL tugmasi</span><span class="touch-only">🏹 tugmasi</span> bilan o'q uzing. Bo'rilardan ehtiyot bo'ling — ular hujum qiladi!</p>
             <span class="difficulty">O'rta</span>
         </div>
     </div>
@@ -272,6 +338,12 @@
 <!-- Minimap -->
 <div id="minimap"><canvas id="minimap-canvas" width="140" height="140"></canvas></div>
 
+<!-- Touch controls (phones) -->
+<div id="touch-controls">
+    <div id="joystick"><div id="joy-knob"></div></div>
+    <div id="shoot-btn"><span class="ico">🏹</span>O'Q</div>
+</div>
+
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
@@ -303,6 +375,8 @@ let playerFlyHeight = 0; // only for eagle
 let arrows = [];
 let shootCooldown = 0;
 let shootRequested = false;
+let shootHeld = false; // touch shoot button held down
+const joy = { x:0, y:0 }; // virtual joystick, -1..1
 let bowDrawAnim = 0;
 const hunterFacing = new THREE.Vector3(0, 0, -1);
 
@@ -378,9 +452,81 @@ function init() {
         if (e.code==='Space'){ markKey('space',false); }
     });
     renderer.domElement.addEventListener('mousedown', () => { shootRequested = true; });
+    setupTouchControls();
 
     clock = new THREE.Clock();
     animate();
+}
+
+// ==================== TOUCH CONTROLS ====================
+function setupTouchControls() {
+    const mq = matchMedia('(pointer: coarse)');
+    const applyTouch = () => document.body.classList.toggle('touch', mq.matches);
+    applyTouch();
+    mq.addEventListener('change', applyTouch);
+
+    const base = document.getElementById('joystick');
+    const knob = document.getElementById('joy-knob');
+    let joyPointer = null;
+    const moveJoy = e => {
+        const r = base.getBoundingClientRect();
+        const max = r.width / 2;
+        let x = e.clientX - (r.left + max), y = e.clientY - (r.top + max);
+        const len = Math.hypot(x, y);
+        if (len > max) { x *= max/len; y *= max/len; }
+        knob.style.transform = `translate(${x}px, ${y}px)`;
+        const nx = x/max, ny = y/max;
+        const dead = Math.hypot(nx, ny) < 0.15;
+        joy.x = dead ? 0 : nx; joy.y = dead ? 0 : ny;
+    };
+    base.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        joyPointer = e.pointerId;
+        try { base.setPointerCapture(e.pointerId); } catch(_) {}
+        moveJoy(e);
+    });
+    base.addEventListener('pointermove', e => { if (e.pointerId === joyPointer) moveJoy(e); });
+    const endJoy = e => {
+        if (e.pointerId !== joyPointer) return;
+        joyPointer = null;
+        resetJoystick();
+    };
+    base.addEventListener('pointerup', endJoy);
+    base.addEventListener('pointercancel', endJoy);
+
+    const btn = document.getElementById('shoot-btn');
+    btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        try { btn.setPointerCapture(e.pointerId); } catch(_) {}
+        shootRequested = true; shootHeld = true;
+        btn.classList.add('pressed');
+    });
+    const endShoot = () => { shootHeld = false; btn.classList.remove('pressed'); };
+    btn.addEventListener('pointerup', endShoot);
+    btn.addEventListener('pointercancel', endShoot);
+    // Block long-press menu / double-tap zoom on the controls
+    document.getElementById('touch-controls').addEventListener('contextmenu', e => e.preventDefault());
+
+    // Keep the minimap below the HUD
+    const hudRight = document.getElementById('hud-right');
+    new ResizeObserver(() => {
+        const r = hudRight.getBoundingClientRect();
+        if (r.height) document.body.style.setProperty('--hud-h', r.bottom + 'px');
+    }).observe(hudRight);
+}
+
+function isTouch() { return document.body.classList.contains('touch'); }
+
+function resetJoystick() {
+    joy.x = 0; joy.y = 0; shootHeld = false;
+    document.getElementById('joy-knob').style.transform = '';
+    document.getElementById('shoot-btn').classList.remove('pressed');
+}
+
+function showTouchControls(on, isHunter) {
+    document.getElementById('touch-controls').classList.toggle('on', on);
+    document.body.classList.toggle('hunter-mode', on && isHunter);
+    resetJoystick();
 }
 
 function markKey(k, on) {
@@ -969,7 +1115,7 @@ function setupEagleMode() {
     health = 100;
     timeLeft = 90;
     document.getElementById('hud-title').textContent = '🦅 BURGUT';
-    document.getElementById('hud-desc').textContent = 'S tugmasini bosib pastga sho\'ng\'ing va ovlang!';
+    document.getElementById('hud-desc').textContent = isTouch() ? 'Joystikni pastga torting — sho\'ng\'ing va ovlang!' : 'S tugmasini bosib pastga sho\'ng\'ing va ovlang!';
 }
 
 function setupWolfMode() {
@@ -1036,13 +1182,14 @@ function setupHunterMode() {
     health = 100;
     timeLeft = 90;
     document.getElementById('hud-title').textContent = '🏹 OVCHI';
-    document.getElementById('hud-desc').textContent = 'PROBEL — o\'q uzish. Kiyik va quyonlarni ovlang!';
+    document.getElementById('hud-desc').textContent = (isTouch() ? '🏹 tugmasi' : 'PROBEL') + ' — o\'q uzish. Kiyik va quyonlarni ovlang!';
 }
 
 function startMode(ch) {
     const isHunter = ch === 'hunter';
     document.getElementById('shoot-hint').style.display = isHunter ? 'flex' : 'none';
     document.getElementById('shoot-label').style.display = isHunter ? 'block' : 'none';
+    showTouchControls(true, isHunter);
     if(ch==='eagle') setupEagleMode();
     else if(ch==='wolf') setupWolfMode();
     else if(ch==='mouse') setupMouseMode();
@@ -1079,6 +1226,7 @@ window.backToSelect = function() {
     document.getElementById('game-over').classList.remove('show');
     document.getElementById('hud').style.display = 'none';
     document.getElementById('controls-hint').style.display = 'none';
+    showTouchControls(false, false);
     document.getElementById('char-select').classList.remove('hidden');
     clearEntities();
     gameRunning = false; gameOverFlag = false;
@@ -1100,17 +1248,18 @@ function updatePlayer(dt) {
     if(keys.s) dz += 1;
     if(keys.a) dx -= 1;
     if(keys.d) dx += 1;
+    dx += joy.x; dz += joy.y; // virtual joystick (analog)
     const moving = dx!==0||dz!==0;
 
     if(moving) {
         const len = Math.sqrt(dx*dx+dz*dz);
-        dx/=len; dz/=len;
-        player.position.x += dx * playerSpeed * dt;
-        player.position.z += dz * playerSpeed * dt;
+        const sp = Math.min(1, len) / len; // keyboard: full speed; joystick: by tilt
+        player.position.x += dx * sp * playerSpeed * dt;
+        player.position.z += dz * sp * playerSpeed * dt;
         // Models face +z, so this turns them toward the movement direction
         const angle = Math.atan2(dx, dz);
         player.rotation.y = angle;
-        hunterFacing.set(dx, 0, dz);
+        hunterFacing.set(dx/len, 0, dz/len);
     }
 
     // Bounds
@@ -1364,7 +1513,7 @@ function checkCollisions(dt) {
         });
 
         // Eagle dive mechanic: pressing S makes eagle go lower (faster dive)
-        if(keys.s) {
+        if(keys.s || joy.y > 0.5) {
             playerFlyHeight = Math.max(1.5, playerFlyHeight - 22*dt);
         } else {
             playerFlyHeight = Math.min(15, playerFlyHeight + 6*dt);
@@ -1434,7 +1583,7 @@ function shootArrow() {
 
 function updateArrows(dt) {
     shootCooldown -= dt;
-    if(shootRequested && shootCooldown <= 0) shootArrow();
+    if((shootRequested || shootHeld) && shootCooldown <= 0) shootArrow();
     shootRequested = false;
 
     arrows.forEach(a => {
